@@ -1,8 +1,10 @@
 #!/bin/env ruby
 # frozen_string_literal: true
 
+require 'logger'
 require 'ostruct'
 
+$log = Logger.new($stdout, level: Logger::WARN)
 $args = OpenStruct.new
 
 #
@@ -39,26 +41,28 @@ OptionParser.new do |parser|
     $args.sample = true
   end
 
+  parser.on '-v', '--verbose', 'Run more verbosely' do
+    $args.verbose = true
+    $log.level = [$log.level - 1, 0].max
+  end
+
   parser.on '-h', '--help', 'Shows this help' do
     puts parser
     exit
   end
 end.parse!
 
-input = format('day%<day>02i.inp', day: DAY)
-input = if File.exist?("#{input}.real") && !$args.sample
-          "#{input}.real"
-        elsif File.exist? "#{input}.sample"
-          "#{input}.sample"
-        else
-          input
-        end
+datafiles = %w[inp.real inp inp.sample]
+datafiles.unshift datafiles.pop if $args.sample
+datafile = datafiles.map { |ext| format("day%<day>02i.%<ext>s", day: DAY, ext: ext) }.find { |file| File.exist? file }
+raise "No input data for day #{DAY}" unless datafile
+$log.debug "Using input data from #{datafile}"
 
 #
 # Actual input/output action
 #
 
-open(input).each_line do |line|
+open(datafile).each_line do |line|
   impl.input line
 end
 
