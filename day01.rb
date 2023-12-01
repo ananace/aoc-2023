@@ -13,17 +13,11 @@ DAY = 1
 
 class String
   def to_numberstring(digits_only: false)
-    tokens = { 
-      one: 1,
-      two: 2,
-      three: 3,
-      four: 4,
-      five: 5,
-      six: 6,
-      seven: 7,
-      eight: 8,
-      nine: 9
-    }
+    tokens = %w[ 
+      one two three
+      four five six
+      seven eight nine
+    ].freeze
     ret = ""
 
     i = 0
@@ -31,13 +25,8 @@ class String
       if self[i] =~ /\d/
         ret += self[i]
       elsif !digits_only
-        tokens.each do |k, v|
-          if self[i, k.size] == k.to_s
-            ret += v.to_s
-
-            break
-          end
-        end
+        tok = tokens.find { |k| self[i, k.size] == k }
+        ret += (tokens.index(tok) + 1).to_s if tok
       end
       
       i += 1
