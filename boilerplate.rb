@@ -63,7 +63,7 @@ $log.debug "Using input data from #{datafile}"
 #
 
 open(datafile).each_line do |line|
-  impl.input line
+  impl.input line.strip
 end
 
 impl.output
