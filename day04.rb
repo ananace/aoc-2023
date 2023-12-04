@@ -32,25 +32,23 @@ class Implementation
   end
 
   def output
+    @winnings = Array.new(@cards.size, 1)
     part1 = @cards.sum do |card|
       points = card[:numbers] & card[:winning]
       puts "Card #{card[:id]} has #{points.size} matches" if $args.verbose
 
       score = 0
       unless points.empty?
-        score = 1
-        (points.size - 1).times do
-          score *= 2
-        end
+        score = 2 ** (points.size - 1)
 
-        mult = @winnings.count { |id| id == card[:id] } + 1
+        mult = @winnings[card[:id] - 1]
 
         puts "Card #{card[:id]} gets a #{mult}x multiplier" if $args.verbose
         points.size.times do |adj|
           new_card = card[:id] + adj + 1
           next if new_card > @cards.size
 
-          mult.times { @winnings << new_card }
+          @winnings[new_card - 1] += @winnings[card[:id] - 1]
         end
       end
 
@@ -58,7 +56,7 @@ class Implementation
     end
 
     puts "Part 1:", part1
-    puts "Part 2:", @winnings.size + @cards.size
+    puts "Part 2:", @winnings.compact.sum
   end
 end
 
