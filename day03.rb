@@ -100,11 +100,8 @@ class Implementation
     puts part1
 
     gears = @symbols.select do |sym|
-      chr = get(sym)
-      next unless chr == '*'
-
-      adj = @numbers.select { |num| num.adjacent? sym }
-      next unless adj.size == 2
+      next unless get(sym) == '*'
+      next unless @numbers.select { |num| num.adjacent? sym }.size == 2
 
       true
     end
