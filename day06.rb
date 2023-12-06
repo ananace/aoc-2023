@@ -30,12 +30,12 @@ class Implementation
 
   def output
     part1 = @races.map do |race|
-      dist = (0..race[:time]).map do |press_dur|
-        press_dur * (race[:time] - press_dur)
+      dist = (0..race[:time]).count do |press_dur|
+        press_dur * (race[:time] - press_dur) > race[:distance]
       end
-
       puts "For #{race}: #{dist}" if $args.verbose
-      dist.select { |distance| distance > race[:distance] }.size
+
+      dist
     end.inject(:*)
 
     puts "Part 1:", part1
