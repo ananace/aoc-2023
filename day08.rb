@@ -19,7 +19,7 @@ Graph = Struct.new('Graph', :nodes) do
   end
 
   def traverse_parallel(map)
-    steps = nodes.keys
+    nodes.keys
       .select { |n| n.end_with? 'A' }
       .map { |n| count_steps(n, map) { |at| at.end_with? 'Z' } }
       .inject(1, &:lcm)
