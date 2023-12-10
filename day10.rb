@@ -152,7 +152,7 @@ class Implementation
       end
     end
 
-    puts "Part 2:", map.count(2)
+    puts "Part 2:", map.count('I')
   end
 
   private
@@ -197,65 +197,60 @@ class Implementation
 
   def flood_fill(used: [])
     new_dim = @dim * 3
-    new_map = Array.new(new_dim.size, 1)
+    new_map = Array.new(new_dim.size, '.')
 
-    puts "Expanding #{@dim} to #{new_dim}, with #{used.size} used..." if $args.verbose
+    puts "Expanding #{@dim} to #{new_dim}, with #{used.size} visited pipes." if $args.verbose
 
-    (0..(new_dim.y - 1)).each do |y|
-      (0..(new_dim.x - 1)).each do |x|
-        in_point = Point.new x % 3, y % 3
-        next unless in_point == Point.new(1, 1)
-
-        real_point = Point.new x / 3, y / 3
-        used_p = used.include?(real_point)
-
-        real = get(real_point)
-        if real == '.' || !used_p
-          new_map[y * new_dim.x + x] = 2
-        elsif used_p
-          new_map[y * new_dim.x + x] = '#'
-          offsets = @links[real_point].connections
-          offsets.shift
-
-          offsets.each do |offs|
-            diff = offs - real_point
-            new_map[(y + diff.y) * new_dim.x + (x + diff.x)] = '#'
-          end
-        end
+    # Mark all real points as inside
+    (0..(@dim.y - 1)).each do |y|
+      (0..(@dim.x - 1)).each do |x|
+        expanded_point = Point.new x * 3 + 1, y * 3 + 1
+        new_map[expanded_point.y * new_dim.x + expanded_point.x] = 'I'
       end
     end
 
-    puts "Visiting expanded map..." if $args.verbose
+    # Paint all used pipes over the markings
+    used.each do |used_p|
+      expanded_point = Point.new used_p.x * 3 + 1, used_p.y * 3 + 1
 
-    to_visit = [Point.new(0, 0)]
+      new_map[expanded_point.y * new_dim.x + expanded_point.x] = '#'
+      offsets = @links[used_p].connections
+      offsets.shift
+
+      offsets.each do |offs|
+        diff = offs - used_p
+        new_map[(expanded_point.y + diff.y) * new_dim.x + (expanded_point.x + diff.x)] = '#'
+      end
+    end
+
+    # Flood fill the map from the top-left corner
+    puts "Flooding expanded map..." if $args.verbose
+
     out = Time.now
 
+    to_visit = [Point.new(0, 0)]
     until to_visit.empty?
       at = to_visit.shift
       new_map[at.y * new_dim.x + at.x] = ' '
 
       (-1..1).each do |off_y|
         (-1..1).each do |off_x|
-          next if (off_x.zero? && off_y.zero?) || (!off_x.zero? && !off_y.zero?)
+          next if (off_x.zero? && off_y.zero?) || !(off_x.zero? || off_y.zero?)
 
-          off = Point.new off_x, off_y
-          off_p = at + off
-
+          off_p = at + Point.new(off_x, off_y)
           next if off_p.x < 0 || off_p.y < 0 \
             || off_p.x >= new_dim.x || off_p.y >= new_dim.y \
             || to_visit.include?(off_p)
 
           val = new_map[off_p.y * new_dim.x + off_p.x]
-          #puts "At #{at}, testing #{off}/#{off_p} (#{val})"
-
-          next if val == 0 || val == '#' || val == ' '
+          next unless %w[. I].include? val
 
           to_visit << off_p
         end
       end
 
       if Time.now - out > 1
-        puts "Still visiting, queue: #{to_visit.size}" if $args.verbose
+        puts "Still flooding, queue: #{to_visit.size}" if $args.verbose
         out = Time.now
       end
     end
