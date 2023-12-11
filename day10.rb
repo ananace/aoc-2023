@@ -226,12 +226,10 @@ class Implementation
     # Flood fill the map from the top-left corner
     puts "Flooding expanded map..." if $args.verbose
 
-    out = Time.now
-
+    new_map[0] = ' '
     to_visit = [Point.new(0, 0)]
     until to_visit.empty?
       at = to_visit.shift
-      new_map[at.y * new_dim.x + at.x] = ' '
 
       (-1..1).each do |off_y|
         (-1..1).each do |off_x|
@@ -239,19 +237,14 @@ class Implementation
 
           off_p = at + Point.new(off_x, off_y)
           next if off_p.x < 0 || off_p.y < 0 \
-            || off_p.x >= new_dim.x || off_p.y >= new_dim.y \
-            || to_visit.include?(off_p)
+            || off_p.x >= new_dim.x || off_p.y >= new_dim.y
 
           val = new_map[off_p.y * new_dim.x + off_p.x]
           next unless %w[. I].include? val
 
+          new_map[off_p.y * new_dim.x + off_p.x] = ' '
           to_visit << off_p
         end
-      end
-
-      if Time.now - out > 1
-        puts "Still flooding, queue: #{to_visit.size}" if $args.verbose
-        out = Time.now
       end
     end
 
