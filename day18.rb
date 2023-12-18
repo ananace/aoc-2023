@@ -13,7 +13,7 @@ $args = OpenStruct.new
 
 DAY = 18
 
-DIRECTION=%i[U R D L]
+DIRECTION=%i[R D L U]
 
 Point = Struct.new('Point', :x, :y) do
   def +(other)
@@ -55,71 +55,41 @@ class Implementation
   end
 
   def output
-    area, dim = dig
-    if $args.verbose
-      dim.y.times do |y|
-        dim.x.times do |x|
-          print area[y * dim.x + x]
-        end
-        puts
-      end
-    end
-    
-    puts "Part 1:", area.count('#')
+    puts "Part 1:", dig
+
+    rebuild_program
+
+    puts "Part 2:", dig
   end
 
   def dig
     at = Point.new(0, 0)
     points = [at]
+    perimeter = 0
     @program.each do |task|
       at += Point.for(task.direction) * task.length
+      perimeter += task.length
       points << at
     end
 
     min = Point.new(points.map(&:x).min, points.map(&:y).min)
     max = Point.new(points.map(&:x).max, points.map(&:y).max)
-    dim = max - min + Point.new(1, 1)
+    dim = max - min
 
-    puts "Program results in #{min} -> #{max} area (#{dim})" if $args.verbose
+    puts "Program results in #{dim} area (#{perimeter})" if $args.verbose
 
-    grid = ''
-    dim.y.times do |y|
-      dim.x.times do |x|
-        grid += '.'
-      end
-    end
-
-    at = Point.new(0, 0)
-    @program.each do |task|
-      task.length.times do
-        grid[(at.y - min.y) * dim.x + (at.x - min.x)] = '#'
-        at += Point.for(task.direction)
-      end
-    end
-
-    flood(grid, dim, Point.new(1, 1) - min, '#')
-
-    return grid, dim
+    # Shoelace formula
+    ((points
+      .zip(points[1..] + [points[0]])
+      .sum { |a, b| a.x * b.y - b.x * a.y } / 2)
+      .abs + perimeter * 0.5 + 1)
+      .to_i
   end
 
-  def flood(area, size, at, char)
-    puts "Flooding area..." if $args.verbose
-
-    to_flood = [at]
-    area[at.y * size.x + at.x] = '#'
-
-    until to_flood.empty?
-      point = to_flood.shift
-
-      DIRECTION.each do |dir|
-        new = point + Point.for(dir)
-        next if new.x < 0 || new.y < 0 || new.x >= size.x || new.y >= size.y
-        next if area[new.y * size.x + new.x] != '.'
-
-        area[new.y * size.x + new.x] = '#'
-
-        to_flood << new
-      end
+  def rebuild_program
+    @program.map! do |task|
+      col = task.color.delete '#'
+      Task.new DIRECTION[col[-1].to_i], col[0..4].to_i(16), '#000'
     end
   end
 end
